@@ -11,8 +11,6 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var Source = "wttr.in"
-
 type WttrFetcher struct {
 }
 
@@ -22,6 +20,10 @@ func (f *WttrFetcher) Fetch(cities []string, dailyForecasts chan forecast.DailyF
 			f.fetchCity(city, dailyForecasts, hourlyForecasts)
 		}
 	}
+}
+
+func (f *WttrFetcher) source() string {
+	return "wttr.in"
 }
 
 func (f *WttrFetcher) hasCity(city *string) bool {
@@ -61,7 +63,7 @@ func (f *WttrFetcher) fetchCity(city string, dailyForecasts chan forecast.DailyF
 		Temperature: float32(tempC),
 		Condition:   parseWeatherCode(weatherCode),
 		Location:    city,
-		Source:      Source,
+		Source:      f.source(),
 	}
 
 	hourlyForecasts <- currentCondition
@@ -81,7 +83,7 @@ func (f *WttrFetcher) fetchCity(city string, dailyForecasts chan forecast.DailyF
 			TemperatureMax: float32(tempMax),
 			Condition:      parseWeatherCode(weatherCode),
 			Location:       city,
-			Source:         Source,
+			Source:         f.source(),
 		}
 
 		dailyForecasts <- dailyForecast
@@ -108,7 +110,7 @@ func (f *WttrFetcher) fetchCity(city string, dailyForecasts chan forecast.DailyF
 				Temperature: float32(tempC),
 				Condition:   parseWeatherCode(weatherCode),
 				Location:    city,
-				Source:      Source,
+				Source:      f.source(),
 			}
 
 			// fmt.Printf("%v\n", hourlyForecast)
