@@ -34,7 +34,7 @@ func (f *HourlyForecast) Describe() string {
 	if f.TargetAt.Before(time.Now()) {
 		when = "was"
 	}
-	return fmt.Sprintf("On the %v there %v %v and %v˚", f.TargetAt.Format("2006-01-02 15:04 -0700"), when, f.DescribeCondition(), f.Temperature)
+	return fmt.Sprintf("According to %v in %v on the %v there %v %v and %v˚", f.Source, f.Location, f.TargetAt.Format("2006-01-02 15:04 -0700"), when, f.DescribeCondition(), f.Temperature)
 }
 
 // type Conditioned interface {
@@ -60,5 +60,5 @@ func (f *DailyForecast) Describe() string {
 	if f.TargetAt.Before(time.Now()) {
 		when = "supposed to be"
 	}
-	return fmt.Sprintf("On the %v there %v %v and %v˚-%v˚", f.TargetAt.Format("2006-01-02"), when, f.DescribeCondition(), f.TemperatureMin, f.TemperatureMax)
+	return fmt.Sprintf("According to %v in %v on the %v there %v %v and %v˚-%v˚", f.Source, f.Location, f.TargetAt.Format("2006-01-02"), when, f.DescribeCondition(), f.TemperatureMin, f.TemperatureMax)
 }
