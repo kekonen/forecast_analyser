@@ -33,6 +33,7 @@ func main() {
 	}
 
 	// Migrate the schema
+	db.AutoMigrate(&forecast.CurrentForecast{})
 	db.AutoMigrate(&forecast.DailyForecast{})
 	db.AutoMigrate(&forecast.HourlyForecast{})
 
@@ -62,15 +63,22 @@ func main() {
 		fetcher2.Fetch(cities, forecasts)
 	}()
 
+	currentForecasts := make([]forecast.CurrentForecast, 0)
+	hourlyForecasts := make([]forecast.HourlyForecast, 0)
+	dailyForecasts := make([]forecast.DailyForecast, 0)
+
 	go func() {
 		for f := range forecasts {
 			switch v := f.(type) {
 			case forecast.DailyForecast:
 				fmt.Printf("dly: %v\n", v.Describe())
+				dailyForecasts = append(dailyForecasts, v)
 			case forecast.HourlyForecast:
 				fmt.Printf("hly: %v\n", v.Describe())
+				hourlyForecasts = append(hourlyForecasts, v)
 			case forecast.CurrentForecast:
 				fmt.Printf("Current: %v\n", v.Describe())
+				currentForecasts = append(currentForecasts, v)
 			default:
 				fmt.Printf("I don't know about type %T!\n", v)
 			}
@@ -80,4 +88,8 @@ func main() {
 	wg.Wait()
 	fmt.Println("Closing!")
 	close(forecasts)
+
+	db.CreateInBatches(currentForecasts, 100)
+	db.CreateInBatches(hourlyForecasts, 100)
+	db.CreateInBatches(dailyForecasts, 100)
 }
