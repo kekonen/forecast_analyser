@@ -44,30 +44,32 @@ func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 		fmt.Printf("Error happened: %v\n", err)
 	}
 	defer resp.Body.Close()
-	jsonStr, err := io.ReadAll(resp.Body)
+	jsonBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		// handle error
 		fmt.Printf("Error happened: %v\n", err)
 	}
 
-	localObsDateTime := gjson.Get(string(jsonStr), "current_condition.0.localObsDateTime").String()
+	jsonStr := string(jsonBytes)
+
+	// localObsDateTime := gjson.Get(jsonStr, "current_condition.0.localObsDateTime").String()
 	location, err := time.LoadLocation("Europe/Berlin")
-	locatlObesrvationTime, _ := time.ParseInLocation("2006-01-02 3:04 PM", localObsDateTime, location)
+	// locatlObesrvationTime, _ := time.ParseInLocation("2006-01-02 3:04 PM", localObsDateTime, location)
 
-	tempCStr := gjson.Get(string(jsonStr), "current_condition.0.temp_C").String()
+	tempCStr := gjson.Get(jsonStr, "current_condition.0.temp_C").String()
 	tempC, _ := strconv.Atoi(tempCStr)
-	weatherCode := gjson.Get(string(jsonStr), "current_condition.0.weatherCode").Int()
+	weatherCode := gjson.Get(jsonStr, "current_condition.0.weatherCode").Int()
 
-	currentCondition := forecast.HourlyForecast{
-		TargetAt:    locatlObesrvationTime,
+	currentCondition := forecast.CurrentForecast{
+		// TargetAt:    locatlObesrvationTime,
 		Temperature: float32(tempC),
-		Condition:   parseWeatherCode(weatherCode),
+		Condition:   f.parseWeatherCode(weatherCode),
 		Location:    city,
 		Source:      f.source(),
 	}
 
 	forecasts <- currentCondition
-	weatherDays := gjson.Get(string(jsonStr), "weather")
+	weatherDays := gjson.Get(jsonStr, "weather")
 	weatherDays.ForEach(func(key gjson.Result, value gjson.Result) bool {
 		dateStr := value.Get("date")
 		// fmt.Printf("Date: %v\n", dateStr)
@@ -81,7 +83,7 @@ func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 			TargetAt:       date,
 			TemperatureMin: float32(tempMin),
 			TemperatureMax: float32(tempMax),
-			Condition:      parseWeatherCode(weatherCode),
+			Condition:      f.parseWeatherCode(weatherCode),
 			Location:       city,
 			Source:         f.source(),
 		}
@@ -108,7 +110,7 @@ func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 			hourlyForecast := forecast.HourlyForecast{
 				TargetAt:    fullDate,
 				Temperature: float32(tempC),
-				Condition:   parseWeatherCode(weatherCode),
+				Condition:   f.parseWeatherCode(weatherCode),
 				Location:    city,
 				Source:      f.source(),
 			}
@@ -122,7 +124,7 @@ func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 	})
 }
 
-func parseWeatherCode(weatherCode int64) int32 {
+func (f *WttrFetcher) parseWeatherCode(weatherCode int64) int32 {
 	switch weatherCode {
 	case 113:
 		return 0

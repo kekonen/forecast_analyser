@@ -42,14 +42,20 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
-	// fetcher1 := fetchers.WttrFetcher{}
-	fetcher2 := fetchers.WttrFetcher{}
+	fetcher1 := fetchers.WttrFetcher{}
+	fetcher2 := fetchers.NewOpenWeatherFetcher("f7d469c6ee94d8569b4f98bfe43fb4a1")
 
 	// wg.Add(1)
 	// go func() {
 	// 	defer wg.Done()
 	// 	fetcher1.Fetch(cities, dailyForecasts, hourlyForecasts)
 	// }()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		fetcher1.Fetch(cities, forecasts)
+	}()
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -63,6 +69,8 @@ func main() {
 				fmt.Printf("dly: %v\n", v.Describe())
 			case forecast.HourlyForecast:
 				fmt.Printf("hly: %v\n", v.Describe())
+			case forecast.CurrentForecast:
+				fmt.Printf("Current: %v\n", v.Describe())
 			default:
 				fmt.Printf("I don't know about type %T!\n", v)
 			}

@@ -20,7 +20,7 @@ type HourlyForecast struct {
 	gorm.Model
 	TargetAt    time.Time
 	Temperature float32
-	Condition   int32 // 0: Sun, 1: Partial Clouds, 2: Clouds, 3: Rain, 4: Snow
+	Condition   int32 // 0: Sun, 1: Partial Clouds, 2: Clouds, 3: Fog, 4: Rain, 5: Snow
 	Location    string
 	Source      string
 }
@@ -34,7 +34,23 @@ func (f *HourlyForecast) Describe() string {
 	if f.TargetAt.Before(time.Now()) {
 		when = "was"
 	}
-	return fmt.Sprintf("According to %v in %v on the %v there %v %v and %v˚", f.Source, f.Location, f.TargetAt.Format("2006-01-02 15:04 -0700"), when, f.DescribeCondition(), f.Temperature)
+	return fmt.Sprintf("According to '%v' in %v on the %v there %v %v and %v˚", f.Source, f.Location, f.TargetAt.Format("2006-01-02 15:04 -0700"), when, f.DescribeCondition(), f.Temperature)
+}
+
+type CurrentForecast struct {
+	gorm.Model
+	Temperature float32
+	Condition   int32 // 0: Sun, 1: Partial Clouds, 2: Clouds, 3: Fog, 4: Rain, 5: Snow
+	Location    string
+	Source      string
+}
+
+func (f *CurrentForecast) DescribeCondition() string {
+	return conditions[f.Condition]
+}
+
+func (f *CurrentForecast) Describe() string {
+	return fmt.Sprintf("According to '%v' in %v now it is %v and %v˚", f.Source, f.Location, f.DescribeCondition(), f.Temperature)
 }
 
 // type Conditioned interface {
@@ -46,7 +62,7 @@ type DailyForecast struct {
 	TargetAt       time.Time
 	TemperatureMin float32
 	TemperatureMax float32
-	Condition      int32 // 0: Sun, 1: Partial Clouds, 2: Clouds, 3: Rain, 4: Snow
+	Condition      int32 // 0: Sun, 1: Partial Clouds, 2: Clouds, 3: Fog, 4: Rain, 5: Snow
 	Location       string
 	Source         string
 }
@@ -60,5 +76,42 @@ func (f *DailyForecast) Describe() string {
 	if f.TargetAt.Before(time.Now()) {
 		when = "supposed to be"
 	}
-	return fmt.Sprintf("According to %v in %v on the %v there %v %v and %v˚-%v˚", f.Source, f.Location, f.TargetAt.Format("2006-01-02"), when, f.DescribeCondition(), f.TemperatureMin, f.TemperatureMax)
+	return fmt.Sprintf("According to '%v' in %v on the %v there %v %v and %v˚-%v˚", f.Source, f.Location, f.TargetAt.Format("2006-01-02"), when, f.DescribeCondition(), f.TemperatureMin, f.TemperatureMax)
+}
+
+func (f *DailyForecast) GetSource() string {
+	return f.Source
+}
+
+func (f *HourlyForecast) GetSource() string {
+	return f.Source
+}
+
+func (f *CurrentForecast) GetSource() string {
+	return f.Source
+}
+
+func (f *DailyForecast) GetLocation() string {
+	return f.Location
+}
+
+func (f *HourlyForecast) GetLocation() string {
+	return f.Location
+}
+
+func (f *CurrentForecast) GetLocation() string {
+	return f.Location
+}
+
+type Sourceable interface {
+	GetSource() string
+}
+
+type Locatable interface {
+	GetLocation() string
+}
+
+type SourceableAndLocatable interface {
+	Sourceable
+	Locatable
 }
