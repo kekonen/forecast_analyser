@@ -14,10 +14,10 @@ import (
 type WttrFetcher struct {
 }
 
-func (f *WttrFetcher) Fetch(cities []string, dailyForecasts chan forecast.DailyForecast, hourlyForecasts chan forecast.HourlyForecast) {
+func (f *WttrFetcher) Fetch(cities []string, forecasts chan interface{}) {
 	for _, city := range cities {
 		if f.hasCity(&city) {
-			f.fetchCity(city, dailyForecasts, hourlyForecasts)
+			f.fetchCity(city, forecasts)
 		}
 	}
 }
@@ -34,7 +34,7 @@ func (f *WttrFetcher) getCityUrl(city *string) string {
 	return fmt.Sprintf("http://wttr.in/%s?format=j1", *city)
 }
 
-func (f *WttrFetcher) fetchCity(city string, dailyForecasts chan forecast.DailyForecast, hourlyForecasts chan forecast.HourlyForecast) {
+func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 	url := f.getCityUrl(&city)
 	// fmt.Printf("Wttr.in fetching: %s\n", url)
 
@@ -66,7 +66,7 @@ func (f *WttrFetcher) fetchCity(city string, dailyForecasts chan forecast.DailyF
 		Source:      f.source(),
 	}
 
-	hourlyForecasts <- currentCondition
+	forecasts <- currentCondition
 	weatherDays := gjson.Get(string(jsonStr), "weather")
 	weatherDays.ForEach(func(key gjson.Result, value gjson.Result) bool {
 		dateStr := value.Get("date")
@@ -86,7 +86,7 @@ func (f *WttrFetcher) fetchCity(city string, dailyForecasts chan forecast.DailyF
 			Source:         f.source(),
 		}
 
-		dailyForecasts <- dailyForecast
+		forecasts <- dailyForecast
 
 		value.Get("hourly").ForEach(func(key gjson.Result, value gjson.Result) bool {
 			timeStr := value.Get("time").String()
@@ -114,7 +114,7 @@ func (f *WttrFetcher) fetchCity(city string, dailyForecasts chan forecast.DailyF
 			}
 
 			// fmt.Printf("%v\n", hourlyForecast)
-			hourlyForecasts <- hourlyForecast
+			forecasts <- hourlyForecast
 
 			return true
 		})

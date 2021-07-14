@@ -36,8 +36,7 @@ func main() {
 	db.AutoMigrate(&forecast.DailyForecast{})
 	db.AutoMigrate(&forecast.HourlyForecast{})
 
-	dailyForecasts := make(chan forecast.DailyForecast)
-	hourlyForecasts := make(chan forecast.HourlyForecast)
+	forecasts := make(chan interface{})
 	cities := []string{
 		"Berlin",
 	}
@@ -54,22 +53,23 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		fetcher2.Fetch(cities, dailyForecasts, hourlyForecasts)
+		fetcher2.Fetch(cities, forecasts)
 	}()
 
 	go func() {
-		for forecast := range dailyForecasts {
-			fmt.Printf("%v\n", forecast.Describe())
-		}
-	}()
-
-	go func() {
-		for forecast := range hourlyForecasts {
-			fmt.Printf("%v\n", forecast.Describe())
+		for f := range forecasts {
+			switch v := f.(type) {
+			case forecast.DailyForecast:
+				fmt.Printf("dly: %v\n", v.Describe())
+			case forecast.HourlyForecast:
+				fmt.Printf("hly: %v\n", v.Describe())
+			default:
+				fmt.Printf("I don't know about type %T!\n", v)
+			}
 		}
 	}()
 
 	wg.Wait()
 	fmt.Println("Closing!")
-	close(dailyForecasts)
+	close(forecasts)
 }
