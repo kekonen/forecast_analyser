@@ -90,7 +90,7 @@ func (f *OpenWeatherFetcher) fetchCity(city string, forecasts chan interface{}) 
 
 	temp := gjson.Get(jsonStr, "current.temp").Float()
 	// tempC, _ := strconv.Atoi(tempCStr)
-	weatherId := gjson.Get(jsonStr, "current.weather.id").Int()
+	weatherId := gjson.Get(jsonStr, "current.weather.0.id").Int()
 
 	currentCondition := forecast.CurrentForecast{
 		Temperature: float32(temp),
@@ -107,7 +107,7 @@ func (f *OpenWeatherFetcher) fetchCity(city string, forecasts chan interface{}) 
 		// fmt.Printf("Date: %v\n", dateStr)
 
 		temp := value.Get("temp").Float()
-		weatherId := gjson.Get(jsonStr, "weather.id").Int()
+		weatherId := value.Get("weather.0.id").Int()
 
 		// date, _ := time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s 00:00", dateStr), location)
 
@@ -132,7 +132,7 @@ func (f *OpenWeatherFetcher) fetchCity(city string, forecasts chan interface{}) 
 
 		minTemp := value.Get("temp.min").Float()
 		maxTemp := value.Get("temp.max").Float()
-		weatherId := gjson.Get(jsonStr, "weather.id").Int()
+		weatherId := value.Get("weather.0.id").Int()
 
 		// date, _ := time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s 00:00", dateStr), location)
 
