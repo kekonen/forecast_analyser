@@ -36,7 +36,6 @@ func (f *WttrFetcher) getCityUrl(city *string) string {
 
 func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 	url := f.getCityUrl(&city)
-	// fmt.Printf("Wttr.in fetching: %s\n", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -52,16 +51,13 @@ func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 
 	jsonStr := string(jsonBytes)
 
-	// localObsDateTime := gjson.Get(jsonStr, "current_condition.0.localObsDateTime").String()
 	location, err := time.LoadLocation("Europe/Berlin")
-	// locatlObesrvationTime, _ := time.ParseInLocation("2006-01-02 3:04 PM", localObsDateTime, location)
 
 	tempCStr := gjson.Get(jsonStr, "current_condition.0.temp_C").String()
 	tempC, _ := strconv.Atoi(tempCStr)
 	weatherCode := gjson.Get(jsonStr, "current_condition.0.weatherCode").Int()
 
 	currentCondition := forecast.CurrentForecast{
-		// TargetAt:    locatlObesrvationTime,
 		Temperature: float32(tempC),
 		Condition:   f.parseWeatherCode(weatherCode),
 		Location:    city,
@@ -72,7 +68,6 @@ func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 	weatherDays := gjson.Get(jsonStr, "weather")
 	weatherDays.ForEach(func(key gjson.Result, value gjson.Result) bool {
 		dateStr := value.Get("date")
-		// fmt.Printf("Date: %v\n", dateStr)
 
 		tempMin := value.Get("mintempC").Int()
 		tempMax := value.Get("maxtempC").Int()
@@ -100,8 +95,6 @@ func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 			tempC := value.Get("tempC").Float()
 			weatherCode := value.Get("weatherCode").Int()
 
-			// fmt.Printf(" * %v: %v %v\n", timeStr, tempC, parseWeatherCode(weatherCode))
-
 			fullDate, err := time.ParseInLocation("2006-01-02 1504", fmt.Sprintf("%s %s", dateStr, timeStr), location)
 			if err != nil {
 				fmt.Println(err)
@@ -115,7 +108,6 @@ func (f *WttrFetcher) fetchCity(city string, forecasts chan interface{}) {
 				Source:      f.source(),
 			}
 
-			// fmt.Printf("%v\n", hourlyForecast)
 			forecasts <- hourlyForecast
 
 			return true

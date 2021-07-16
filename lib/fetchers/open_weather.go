@@ -68,7 +68,6 @@ func (f *OpenWeatherFetcher) getCityUrl(city *string) string {
 
 func (f *OpenWeatherFetcher) fetchCity(city string, forecasts chan interface{}) {
 	url := f.getCityUrl(&city)
-	// fmt.Printf("Wttr.in fetching: %s\n", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -84,12 +83,9 @@ func (f *OpenWeatherFetcher) fetchCity(city string, forecasts chan interface{}) 
 
 	jsonStr := string(jsonBytes)
 
-	// localObsDateTime := gjson.Get(jsonStr, "current_condition.0.localObsDateTime").String()
 	location, err := time.LoadLocation("Europe/Berlin")
-	// locatlObesrvationTime, _ := time.ParseInLocation("2006-01-02 3:04 PM", localObsDateTime, location)
 
 	temp := gjson.Get(jsonStr, "current.temp").Float()
-	// tempC, _ := strconv.Atoi(tempCStr)
 	weatherId := gjson.Get(jsonStr, "current.weather.0.id").Int()
 
 	currentCondition := forecast.CurrentForecast{
@@ -104,12 +100,9 @@ func (f *OpenWeatherFetcher) fetchCity(city string, forecasts chan interface{}) 
 	hourly.ForEach(func(key gjson.Result, value gjson.Result) bool {
 		dtInt := value.Get("dt").Int()
 		date := time.Unix(dtInt, 0)
-		// fmt.Printf("Date: %v\n", dateStr)
 
 		temp := value.Get("temp").Float()
 		weatherId := value.Get("weather.0.id").Int()
-
-		// date, _ := time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s 00:00", dateStr), location)
 
 		hourlyForecast := forecast.HourlyForecast{
 			TargetAt:    date,
@@ -128,13 +121,10 @@ func (f *OpenWeatherFetcher) fetchCity(city string, forecasts chan interface{}) 
 		dtInt := value.Get("dt").Int()
 		d := time.Unix(dtInt, 0)
 		date := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, location)
-		// fmt.Printf("Date: %v\n", dateStr)
 
 		minTemp := value.Get("temp.min").Float()
 		maxTemp := value.Get("temp.max").Float()
 		weatherId := value.Get("weather.0.id").Int()
-
-		// date, _ := time.ParseInLocation("2006-01-02 15:04", fmt.Sprintf("%s 00:00", dateStr), location)
 
 		dailyForecast := forecast.DailyForecast{
 			TargetAt:       date,
